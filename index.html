@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Insight Data — Le pare-feu data 100% local</title>
+<meta name="description" content="Insight Data bloque la consommation de data mobile application par application, sans jamais envoyer vos données à un serveur.">
+<link rel="icon" href="assets/logo.png">
+<style>
+  :root {
+    --blue-light: #01A2FC;
+    --blue: #0080FE;
+    --blue-dark: #0038C2;
+    --blue-deep: #001DAB;
+    --bg: #F8FAFD;
+    --surface: #FFFFFF;
+    --surface-alt: #EEF3FB;
+    --text: #10151F;
+    --text-muted: #4B5568;
+    --border: #E2E8F2;
+    --danger: #E53935;
+    --alert: #FB8C00;
+    --green: #2E9E5B;
+    --green-container: #D9F2E3;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --shadow: 0 20px 50px -20px rgba(0, 56, 194, 0.25);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E1420;
+      --surface: #161D2C;
+      --surface-alt: #1C2436;
+      --text: #EEF3FB;
+      --text-muted: #9AA7BD;
+      --border: #262F44;
+      --shadow: 0 20px 50px -20px rgba(1, 162, 252, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0E1420;
+    --surface: #161D2C;
+    --surface-alt: #1C2436;
+    --text: #EEF3FB;
+    --text-muted: #9AA7BD;
+    --border: #262F44;
+    --shadow: 0 20px 50px -20px rgba(1, 162, 252, 0.35);
+  }
+  :root[data-theme="light"] {
+    --bg: #F8FAFD;
+    --surface: #FFFFFF;
+    --surface-alt: #EEF3FB;
+    --text: #10151F;
+    --text-muted: #4B5568;
+    --border: #E2E8F2;
+    --shadow: 0 20px 50px -20px rgba(0, 56, 194, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; }
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* NAV */
+  header.site {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav.wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-decoration: none;
+  }
+  .brand img { width: 32px; height: 32px; border-radius: 8px; }
+  nav.wrap .links {
+    display: flex;
+    gap: 28px;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  nav.wrap .links a {
+    text-decoration: none;
+    color: var(--text-muted);
+    transition: color .15s ease;
+  }
+  nav.wrap .links a:hover { color: var(--text); }
+  @media (max-width: 640px) {
+    nav.wrap .links { display: none; }
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: 88px 0 64px;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 640px;
+    background: radial-gradient(60% 60% at 30% 20%, color-mix(in srgb, var(--blue-light) 22%, transparent), transparent 70%),
+                radial-gradient(50% 50% at 80% 10%, color-mix(in srgb, var(--blue-deep) 18%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 48px;
+    align-items: center;
+  }
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: 1fr; text-align: center; }
+    .hero-grid .cta-row { justify-content: center; }
+    .hero-grid .trust-bar { justify-content: center; }
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--blue);
+    letter-spacing: .02em;
+  }
+  .eyebrow .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 3px var(--green-container);
+  }
+  h1 {
+    font-size: clamp(2.1rem, 4.4vw, 3.2rem);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin: 20px 0 18px;
+    font-weight: 800;
+  }
+  h1 .grad {
+    background: linear-gradient(100deg, var(--blue-light), var(--blue-dark));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .lede {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 46ch;
+    margin: 0 0 32px;
+  }
+  @media (max-width: 860px) { .lede { margin-inline: auto; } }
+
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.98rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: linear-gradient(120deg, var(--blue-light), var(--blue-dark));
+    color: #fff;
+    box-shadow: var(--shadow);
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn[disabled], .btn.soon {
+    opacity: .85;
+    cursor: default;
+  }
+
+  .trust-bar {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .trust-item svg { width: 20px; height: 20px; flex: none; color: var(--blue); }
+
+  /* PHONE MOCK */
+  .phone-stage {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  .phone {
+    width: min(300px, 78vw);
+    border-radius: 38px;
+    padding: 12px;
+    background: linear-gradient(160deg, #0c1626, #060a12);
+    box-shadow: var(--shadow), 0 2px 0 rgba(255,255,255,.06) inset;
+  }
+  .phone img {
+    border-radius: 26px;
+    display: block;
+  }
+  .phone-float {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    box-shadow: var(--shadow);
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .phone-float.f1 { top: 8%; left: -10px; }
+  .phone-float.f2 { bottom: 12%; right: -18px; }
+  @media (max-width: 640px) {
+    .phone-float { display: none; }
+  }
+  .badge-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* SECTIONS */
+  section { padding: 88px 0; }
+  .section-head { max-width: 620px; margin: 0 auto 48px; text-align: center; }
+  .section-head .eyebrow { margin-bottom: 16px; }
+  .section-head h2 {
+    font-size: clamp(1.7rem, 3vw, 2.3rem);
+    letter-spacing: -0.015em;
+    margin: 0 0 14px;
+    font-weight: 800;
+  }
+  .section-head p { color: var(--text-muted); font-size: 1.05rem; margin: 0; }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 620px) { .features-grid { grid-template-columns: 1fr; } }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+  }
+  .feature-icon {
+    width: 46px; height: 46px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(140deg, var(--blue-light), var(--blue-dark));
+    color: #fff;
+    margin-bottom: 18px;
+  }
+  .feature-icon svg { width: 24px; height: 24px; }
+  .feature-card h3 { margin: 0 0 8px; font-size: 1.08rem; font-weight: 700; }
+  .feature-card p { margin: 0; color: var(--text-muted); font-size: 0.94rem; }
+
+  /* SHOWCASE */
+  .showcase-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 780px) { .showcase-strip { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; } }
+  .showcase-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    text-align: center;
+  }
+  .showcase-item .phone { width: 100%; margin-bottom: 16px; }
+  .showcase-item h4 { margin: 0 0 6px; font-size: 0.98rem; font-weight: 700; }
+  .showcase-item p { margin: 0; color: var(--text-muted); font-size: 0.86rem; }
+
+  /* PRIVACY */
+  .privacy-section {
+    background: linear-gradient(135deg, var(--blue-deep), var(--blue-dark) 55%, var(--blue));
+    border-radius: 32px;
+    color: #fff;
+    padding: 56px;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 40px;
+    align-items: center;
+  }
+  @media (max-width: 860px) {
+    .privacy-section { grid-template-columns: 1fr; padding: 36px 24px; text-align: left; }
+  }
+  .privacy-section h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 0 0 14px; font-weight: 800; letter-spacing: -0.015em; }
+  .privacy-section p.lede-white { color: rgba(255,255,255,.85); font-size: 1.02rem; max-width: 48ch; margin: 0 0 24px; }
+  .privacy-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  .privacy-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 0.95rem;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.16);
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+  }
+  .privacy-list svg { width: 20px; height: 20px; flex: none; margin-top: 1px; }
+  .privacy-cta { margin-top: 28px; }
+  .privacy-cta a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 0;
+  }
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .footer-brand img { width: 26px; height: 26px; border-radius: 7px; }
+  .footer-links { display: flex; gap: 22px; font-size: 0.9rem; color: var(--text-muted); }
+  .footer-links a { text-decoration: none; }
+  .footer-links a:hover { color: var(--text); }
+  .footer-note { color: var(--text-muted); font-size: 0.82rem; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <nav class="wrap">
+    <a class="brand" href="#top">
+      <img src="assets/logo.png" alt="Logo Insight Data">
+      Insight Data
+    </a>
+    <div class="links">
+      <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#apercu">Aperçu</a>
+      <a href="#confidentialite">Confidentialité</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a class="btn btn-secondary" href="#contact" style="padding:10px 18px;font-size:0.88rem;">Nous contacter</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span> 100% local · sans serveur</span>
+        <h1>Reprenez le contrôle de votre <span class="grad">data mobile</span></h1>
+        <p class="lede">Insight Data bloque la consommation de chaque application — Wi-Fi, Mobile ou Urgence — directement sur votre téléphone. Aucune donnée ne quitte jamais l'appareil.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary soon" href="#contact">
+            Bientôt sur Google Play
+          </a>
+          <a class="btn btn-secondary" href="#fonctionnalites">Découvrir les fonctionnalités</a>
+        </div>
+        <div class="trust-bar">
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 9 9 10 5.2-1 9-5 9-10V6z"/></svg>
+            Aucun serveur externe
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/></svg>
+            Zéro publicité
+          </div>
+          <div class="trust-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.5 10.7A2 2 0 0012 14a2 2 0 001.4-.6M6.2 6.2C4 7.8 2.5 10 2 12c1.6 4.6 6 8 10 8 1.8 0 3.6-.6 5.1-1.6M9.9 4.2A10.6 10.6 0 0112 4c4 0 8.4 3.4 10 8-.5 1.4-1.3 2.7-2.3 3.9"/></svg>
+            Aucun tracking
+          </div>
+        </div>
+      </div>
+
+      <div class="phone-stage">
+        <div class="phone-float f1">
+          <span class="badge-dot" style="background:var(--green)"></span>
+          2,1 Go restants
+        </div>
+        <div class="phone">
+          <img src="assets/screenshot-home.png" alt="Tableau de bord Insight Data montrant la consommation data restante">
+        </div>
+        <div class="phone-float f2">
+          <span class="badge-dot" style="background:var(--danger)"></span>
+          Facebook bloqué
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fonctionnalites">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Fonctionnalités</span>
+        <h2>Un contrôle précis, application par application</h2>
+        <p>Tout ce qu'il faut pour ne plus jamais être surpris par votre consommation de data.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 9 9 10 5.2-1 9-5 9-10V6z"/></svg>
+          </div>
+          <h3>Blocage par application</h3>
+          <p>Activez ou coupez l'accès Wi-Fi, Mobile et Urgence indépendamment pour chaque application installée.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
+          <h3>Plans de données cumulables</h3>
+          <p>Suivez plusieurs forfaits en simultané et laissez Insight Data calculer votre solde réel.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.3 3.9 2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+          </div>
+          <h3>Alertes de seuil</h3>
+          <p>Recevez une notification avant d'atteindre votre limite, pas après.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <h3>Coupure automatique à 100%</h3>
+          <p>Plus de mauvaise surprise en fin de mois : la data est coupée dès la limite atteinte.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4m0 4h.01"/></svg>
+          </div>
+          <h3>Mode urgence</h3>
+          <p>Gardez l'essentiel joignable même quand tout le reste est bloqué.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.5 10.7A2 2 0 0012 14a2 2 0 001.4-.6M6.2 6.2C4 7.8 2.5 10 2 12c1.6 4.6 6 8 10 8 1.8 0 3.6-.6 5.1-1.6M9.9 4.2A10.6 10.6 0 0112 4c4 0 8.4 3.4 10 8-.5 1.4-1.3 2.7-2.3 3.9"/></svg>
+          </div>
+          <h3>100% local</h3>
+          <p>Le pare-feu fonctionne entièrement sur votre téléphone. Aucune donnée n'est envoyée à un serveur.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="apercu">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Aperçu</span>
+        <h2>L'app en action</h2>
+        <p>Captures d'écran réelles de l'application.</p>
+      </div>
+
+      <div class="showcase-strip">
+        <div class="showcase-item">
+          <div class="phone"><img src="assets/screenshot-home.png" alt="Écran d'accueil : consommation restante et par application"></div>
+          <h4>Tableau de bord</h4>
+          <p>Consommation restante, temps estimé et suivi en temps réel.</p>
+        </div>
+        <div class="showcase-item">
+          <div class="phone"><img src="assets/screenshot-apps.png" alt="Écran Applications avec bascules Wi-Fi, Mobile et Urgence"></div>
+          <h4>Réglages par application</h4>
+          <p>Wi-Fi, Mobile et Urgence, activables séparément pour chaque app.</p>
+        </div>
+        <div class="showcase-item">
+          <div class="phone"><img src="assets/screenshot-blocked.png" alt="Application bloquée affichée sur le tableau de bord"></div>
+          <h4>Blocage confirmé</h4>
+          <p>L'état de blocage est reflété immédiatement sur le tableau de bord.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="confidentialite">
+    <div class="wrap">
+      <div class="privacy-section">
+        <div>
+          <h2>Votre vie privée n'est pas négociable</h2>
+          <p class="lede-white">Insight Data a été conçu autour d'une promesse simple : tout reste sur votre téléphone. Le pare-feu local intercepte et bloque le trafic sans jamais le faire transiter par un serveur.</p>
+          <div class="privacy-cta">
+            <a href="https://nkonshu.github.io/insightdata-privacy-policy/">Lire la politique de confidentialité complète →</a>
+          </div>
+        </div>
+        <ul class="privacy-list">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Aucune liste d'applications transmise
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Aucune donnée de consommation envoyée
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Pas de compte, pas de connexion requise
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            Rapports de plantage anonymes, désactivables
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="footer-row">
+      <a class="footer-brand" href="#top">
+        <img src="assets/logo.png" alt="Logo Insight Data">
+        Insight Data
+      </a>
+      <div class="footer-links">
+        <a href="https://nkonshu.github.io/insightdata-privacy-policy/">Politique de confidentialité</a>
+        <a href="mailto:contact@example.com">Contact</a>
+        <a href="https://github.com/nkonshu">GitHub</a>
+      </div>
+    </div>
+    <p class="footer-note">© 2026 Insight Data. Conçu pour aider à mieux gérer la consommation de data mobile.</p>
+  </div>
+</footer>
+
+</body>
+</html>
